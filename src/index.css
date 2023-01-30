@@ -1,6 +1,8 @@
-#root, .App {
+#root,
+.App {
 	height: 100%;
 }
+
 body {
 	background-color: #ecf1f5;
 }
@@ -46,4 +48,15 @@ body {
 	min-height: 400px;
 	overflow: auto;
 	padding: 12px 6px;
+}
+
+table,
+th,
+td {
+	border: 1px solid black;
+
+}
+
+.table-header {
+	min-width: 100px;
 }

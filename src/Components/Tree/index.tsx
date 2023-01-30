@@ -1,6 +1,6 @@
 import { Input, Tree } from 'antd';
 import type { DataNode } from 'antd/es/tree';
-import React, { useContext, useMemo, useRef, useState } from 'react';
+import React, { Dispatch, memo, MutableRefObject, SetStateAction, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import AppContext from '../../appContext';
 import { NodeType } from '../../types';
 import Node from './node';
@@ -10,16 +10,21 @@ const { Search } = Input;
 
 interface Props {
   handleContextMenuClick: (key: string) => void;
+  setExpandRef?: MutableRefObject<Dispatch<SetStateAction<React.Key[]>>>
 }
 
-const TreeExtended: React.FC<Props> = ({ handleContextMenuClick }) => {
+const TreeExtended: React.FC<Props> = ({ handleContextMenuClick, setExpandRef }) => {
   const [expandedKeys, setExpandedKeys] = useState<React.Key[]>([]);
   const [autoExpandParent, setAutoExpandParent] = useState(true);
   const searchedKeyword = useRef();
   const [searchResultVisible, setSearchResultVisible] = useState(true);
   const { treeData } = useContext(AppContext);
-  
-  const onExpand = (newExpandedKeys: any[]) => {
+
+  useEffect(() => {
+    setExpandRef.current = setExpandedKeys
+  }, [])
+
+  const onExpand = (newExpandedKeys: React.Key[]) => {
     setExpandedKeys(newExpandedKeys);
     setAutoExpandParent(false);
   };
@@ -36,6 +41,7 @@ const TreeExtended: React.FC<Props> = ({ handleContextMenuClick }) => {
     return <Node node={node} handleContextMenuClick={handleContextMenuClick} />
   }
 
+  console.log(treeData, 'treedata')
   return (
     <div className='tree-wrap'>
       <Search style={{ marginBottom: 8 }} placeholder="جستجو" onChange={handleSearchInputChange} onPressEnter={handlePressEnter} />
@@ -51,4 +57,4 @@ const TreeExtended: React.FC<Props> = ({ handleContextMenuClick }) => {
   );
 };
 
-export default TreeExtended;
+export default memo(TreeExtended);

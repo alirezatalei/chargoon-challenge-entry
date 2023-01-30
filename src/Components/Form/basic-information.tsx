@@ -1,20 +1,41 @@
-import { Form, Input } from 'antd';
-import React from 'react';
+import { Button, Form, FormInstance, Input } from 'antd';
+import React, { useContext, useEffect, useState } from 'react';
+import AppContext from '../../appContext';
+import { NodeType } from '../../types';
 import UserAutoComplete from './user-autocomplete';
 
 interface Props {
-	initialValue?: any;
+	initialValue?: NodeType;
+	onFinish?(values: any): void
+	form: FormInstance<any>
 }
 
-function BasicInformation({ }: Props) {
-	const [form] = Form.useForm();
+function BasicInformation({ onFinish, initialValue, form }: Props) {
+	const { treeData } = useContext(AppContext)
+
+	const fetchIds = (): string[] => {
+		const ids: string[] = [];
+		JSON.stringify(treeData, (key, treeValue) => {
+			if (key === 'key') ids.push(treeValue);
+			return treeValue
+		});
+		return ids
+	}
 
 	return (
-		<Form form={form}>
-			<Form.Item name="title" label="عنوان" labelCol={{ span: 2 }} >
+		<Form form={form} onFinish={onFinish}>
+			<Form.Item
+				rules={[{ required: true, message: 'عنوان الزامسیست' }]}
+				name="title" label="عنوان" labelCol={{ span: 2 }}
+			>
 				<Input />
 			</Form.Item>
-			<Form.Item name="code" label="کد" labelCol={{ span: 2 }}>
+			<Form.Item
+				rules={[{
+					required: true,
+					validator: (_, value) => value ? fetchIds().includes(value) ? Promise.reject(new Error('کد تکراریست')) : Promise.resolve() : Promise.reject(new Error('کد الزامسیست'))
+				}]}
+				name="key" label="کد" labelCol={{ span: 2 }}>
 				<Input />
 			</Form.Item>
 			<Form.Item name="users" label="کاربران" labelCol={{ span: 2 }}>
