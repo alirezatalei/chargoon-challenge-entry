@@ -13,10 +13,11 @@ interface Props {
 function BasicInformation({ onFinish, initialValue, form }: Props) {
 	const { treeData } = useContext(AppContext)
 
+
 	const fetchIds = (): string[] => {
 		const ids: string[] = [];
 		JSON.stringify(treeData, (key, treeValue) => {
-			if (key === 'key') ids.push(treeValue);
+			if (key === 'key' && !(initialValue && initialValue?.key === treeValue)) ids.push(treeValue);
 			return treeValue
 		});
 		return ids
@@ -24,22 +25,22 @@ function BasicInformation({ onFinish, initialValue, form }: Props) {
 
 	return (
 		<Form form={form} onFinish={onFinish}>
-			<Form.Item
+			<Form.Item initialValue={initialValue?.title}
 				rules={[{ required: true, message: 'عنوان الزامسیست' }]}
 				name="title" label="عنوان" labelCol={{ span: 2 }}
 			>
 				<Input />
 			</Form.Item>
-			<Form.Item
+			<Form.Item initialValue={initialValue?.key}
 				rules={[{
 					required: true,
 					validator: (_, value) => value ? fetchIds().includes(value) ? Promise.reject(new Error('کد تکراریست')) : Promise.resolve() : Promise.reject(new Error('کد الزامسیست'))
 				}]}
 				name="key" label="کد" labelCol={{ span: 2 }}>
-				<Input />
+				<Input readOnly={initialValue?.key ? true : false} />
 			</Form.Item>
 			<Form.Item name="users" label="کاربران" labelCol={{ span: 2 }}>
-				<UserAutoComplete />
+				<UserAutoComplete initialValue={initialValue} />
 			</Form.Item>
 		</Form>
 	);

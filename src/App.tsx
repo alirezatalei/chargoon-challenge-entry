@@ -10,6 +10,7 @@ import { NodeType } from "./types";
 function App() {
   const [selectedItem, setSelectedItem] = useState<NodeType>(null);
   const [showEdit, setShowEdit] = useState(true);
+  const [nodeToEdit, setNodeToEdit] = useState<NodeType>()
   const [treeData, setTreeData] = useState([]);
   const expandRef = useRef<React.Dispatch<React.SetStateAction<React.Key[]>>>()
   const nodeClipboard = useRef<NodeType>()
@@ -18,6 +19,10 @@ function App() {
     const result = await getNodes();
     setTreeData(result);
   }
+
+  useEffect(() => {
+    if (selectedItem) setNodeToEdit(undefined)
+  }, [selectedItem])
 
   useEffect(() => {
     fetchTreeData()
@@ -77,26 +82,39 @@ function App() {
 
   }
 
-  const handleUpdateNode = (key: string, data: NodeType): Promise<boolean> => {
+  const handleUpdateNode = (key: string, data: NodeType, type: 'save' | 'edit'): Promise<boolean> => {
     return new Promise((resolve, reject) => {
-      if (selectedItem) {
-        const newTreeData = [...treeData]
+      const newTreeData = [...treeData]
+      if (type === 'edit') {
+        newTreeData.forEach(function iter(item: NodeType, index, objects) {
+          if (item.key === nodeToEdit.key) {
+            item = Object.assign(item, data)
+            setTreeData(newTreeData)
+            setNodeToEdit(undefined)
+          } (item.children || []).forEach(iter);
+        })
+        resolve(true)
+      } else if (selectedItem) {
         newTreeData.forEach(function iter(item: NodeType, index, objects) {
           if (item.key === selectedItem.key) {
             data.parentKey = selectedItem.key
             data.children = []
             data.hierarchy = item.hierarchy.length ? [...item.hierarchy, data.key] : [item.key, key]
             item.children.unshift(data)
-            setSelectedItem(undefined)
             setTreeData(newTreeData)
           } (item.children || []).forEach(iter);
         })
+        setSelectedItem(undefined)
         resolve(true)
       } else {
         console.log('please first choose the parent')
         reject()
       }
     })
+  }
+
+  const onSelectNodeToEdit = (node: NodeType) => {
+    setNodeToEdit(node)
   }
 
   return (
@@ -108,9 +126,9 @@ function App() {
     >
       <div className="App">
         <Sidebar>
-          <ExtendedTree handleContextMenuClick={handleContextMenuClick} setExpandRef={expandRef} />
+          <ExtendedTree handleContextMenuClick={handleContextMenuClick} setExpandRef={expandRef} setNodeToEdit={onSelectNodeToEdit} activeNode={nodeToEdit?.key} />
         </Sidebar>
-        {showEdit && <Form item={selectedItem} updateNode={handleUpdateNode} />}
+        {showEdit && <Form item={selectedItem} updateNode={handleUpdateNode} nodeToEdit={nodeToEdit} />}
       </div>
     </AppContext.Provider>
   );

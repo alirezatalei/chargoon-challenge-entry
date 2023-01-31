@@ -24,7 +24,7 @@ function Accesses({ initialValue, onChange, form }: Props) {
 
 	return (
 		<Form form={form}>
-			<Form.Item name="accesses">
+			<Form.Item name="accesses" initialValue={[...initialValue ?? []]}>
 				<Checkbox.Group options={options} />
 			</Form.Item>
 		</Form>

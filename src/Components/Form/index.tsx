@@ -13,19 +13,31 @@ import UsersList from './user-autocomplete';
 
 interface Props {
 	item: NodeType;
-	updateNode: (key: string, data: NodeType) => Promise<boolean>
+	updateNode: (key: string, data: NodeType, type: 'edit' | 'save') => Promise<boolean>
+	nodeToEdit: NodeType
 }
 
-function FormComponent({ item, updateNode }: Props) {
+function FormComponent({ item, updateNode, nodeToEdit }: Props) {
 	const [access, setAccess] = useState<CheckboxValueType[]>([])
 	const [form] = Form.useForm()
 
+	useEffect(() => {
+		resetForms()
+	}, [nodeToEdit])
+
 	const handleSave = () => {
 		form.validateFields().then(x => {
-			updateNode(x.key, { ...x, accesses: x.accesses ?? [] }).then(resetForms)
+			updateNode(x.key, { ...x, accesses: x.accesses ?? [] }, 'save').then(x => resetForms())
 		})
 	}
 
+	const handleEdit = () => {
+		form.validateFields().then(x => {
+			updateNode(x.key, { ...nodeToEdit, ...x }, 'edit').then(x => {
+				resetForms()
+			})
+		})
+	}
 	const resetForms = () => {
 		form.resetFields()
 		setAccess([])
@@ -37,20 +49,20 @@ function FormComponent({ item, updateNode }: Props) {
 				<Tabs >
 					<Tabs.TabPane tab="اطلاعات اصلی" key="item-1">
 						<div className='form-content'>
-							<BasicInformation initialValue={item} form={form} />
+							<BasicInformation initialValue={nodeToEdit} form={form} />
 						</div>
 					</Tabs.TabPane>
 					<Tabs.TabPane tab="دسترسی ها" key="item-2">
 						<div className='form-content'>
 							<ErrorBoundry>
-								<Accesses initialValue={item?.accesses} onChange={setAccess} form={form} />
+								<Accesses initialValue={nodeToEdit?.accesses} onChange={setAccess} form={form} />
 							</ErrorBoundry>
 						</div>
 					</Tabs.TabPane>
 				</Tabs>
 
 			</div>
-			<ActionBar actions={[{ title: 'ذخیره', handler: handleSave }]} />
+			<ActionBar actions={nodeToEdit ? [{ title: 'ذخیره', handler: handleEdit }] : [{ title: 'افزودن', handler: handleSave }]} />
 		</div>
 	);
 }
